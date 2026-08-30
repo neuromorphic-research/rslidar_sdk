@@ -10,7 +10,12 @@ project(rslidar_sdk)
 # debug: the build reports success, the cloud arrives, and only a consumer that wants the
 # extra fields tells you - RKO-LIO drops every scan with "Point cloud needs timestamps for
 # deskewing", which reads like a driver that is not sending them at all.
-set(POINT_TYPE XYZI CACHE STRING "Point fields: XYZI, XYZIRT, XYZIF or XYZIRTF")
+# XYZIRT, not upstream's XYZI: every lidar this fork is used with feeds lidar-inertial
+# odometry, and RT is ring + per-point timestamp. Without the timestamp RKO-LIO refuses
+# every scan ("Point cloud needs timestamps for deskewing"), and deskewing is the entire
+# reason for carrying an IMU. A default that quietly removes that is the wrong default for
+# us. Still CACHE, so a consumer that only wants XYZI can still ask for it.
+set(POINT_TYPE XYZIRT CACHE STRING "Point fields: XYZI, XYZIRT, XYZIF or XYZIRTF")
 
 option(ENABLE_TRANSFORM "Enable transform functions" OFF)
 if(${ENABLE_TRANSFORM})

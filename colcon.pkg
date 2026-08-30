@@ -9,11 +9,9 @@
 #
 # That matters because RKO-LIO is lidar-INERTIAL odometry. Without this flag mapping and
 # localization have no IMU to fuse.
-# POINT_TYPE=XYZIRT adds per-point ring and timestamp. The timestamp is not optional for
-# lidar-inertial odometry: deskewing is the entire reason for having the IMU, and RKO-LIO
-# refuses a cloud without it ("Point cloud needs timestamps for deskewing"). The default
-# XYZI carries neither. It costs bandwidth and memory per point, which is the trade.
+# POINT_TYPE is not listed here: this fork DEFAULTS to XYZIRT (ring + per-point
+# timestamp), because every lidar it is used with feeds lidar-inertial odometry. Setting
+# it again here would just be a second place to keep in step.
 cmake-args:
   - -DCMAKE_BUILD_TYPE=Release
   - -DENABLE_IMU_DATA_PARSE=ON
-  - -DPOINT_TYPE=XYZIRT
