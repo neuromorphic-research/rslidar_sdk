@@ -5,7 +5,12 @@ project(rslidar_sdk)
 #=======================================
 # Custom Point Type (XYZI,XYZIRT, XYZIF, XYZIRTF)
 #=======================================
-set(POINT_TYPE XYZI)
+# CACHE, so -DPOINT_TYPE=... on the command line (or a colcon.pkg cmake-args entry) is
+# actually honoured. A plain set() here silently overrode it, which is a slow thing to
+# debug: the build reports success, the cloud arrives, and only a consumer that wants the
+# extra fields tells you - RKO-LIO drops every scan with "Point cloud needs timestamps for
+# deskewing", which reads like a driver that is not sending them at all.
+set(POINT_TYPE XYZI CACHE STRING "Point fields: XYZI, XYZIRT, XYZIF or XYZIRTF")
 
 option(ENABLE_TRANSFORM "Enable transform functions" OFF)
 if(${ENABLE_TRANSFORM})
