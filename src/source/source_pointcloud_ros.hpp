@@ -191,9 +191,20 @@ sensor_msgs::Imu toRosMsg(const std::shared_ptr<ImuData>& data, const std::strin
   imu_msg.angular_velocity.y = data->angular_velocity_y;
   imu_msg.angular_velocity.z = data->angular_velocity_z;
 
-  imu_msg.linear_acceleration.x = data->linear_acceleration_x;
-  imu_msg.linear_acceleration.y = data->linear_acceleration_y;
-  imu_msg.linear_acceleration.z = data->linear_acceleration_z;
+  // sensor_msgs/Imu SPECIFIES m/s^2. rs_driver's ImuData carries acceleration in g:
+  // decodeImuPkt scales the raw counts by acclFsr/FSR_BASE and stops there, while the
+  // gyro right beside it IS converted to rad/s (* M_PI / 180). So the SI intent is
+  // clearly there and acceleration is the one that was missed.
+  //
+  // Publishing g in a message that documents m/s^2 is a quiet fault: |a| reads 0.98
+  // instead of 9.81, so anything estimating gravity folds the missing factor into its
+  // accelerometer bias and never complains. RKO-LIO does exactly that - on MEDRA the
+  // same bug with the Livox driver produced a logged bias of -8.817, which is
+  // 0.995 - 9.81 to three decimals.
+  constexpr double kGravity = 9.80665;   // CODATA standard gravity
+  imu_msg.linear_acceleration.x = data->linear_acceleration_x * kGravity;
+  imu_msg.linear_acceleration.y = data->linear_acceleration_y * kGravity;
+  imu_msg.linear_acceleration.z = data->linear_acceleration_z * kGravity;
   return imu_msg;
 }
 #endif
@@ -420,9 +431,20 @@ sensor_msgs::msg::Imu toRosMsg(const std::shared_ptr<ImuData>& data, const std::
   imu_msg.angular_velocity.y = data->angular_velocity_y;
   imu_msg.angular_velocity.z = data->angular_velocity_z;
 
-  imu_msg.linear_acceleration.x = data->linear_acceleration_x;
-  imu_msg.linear_acceleration.y = data->linear_acceleration_y;
-  imu_msg.linear_acceleration.z = data->linear_acceleration_z;
+  // sensor_msgs/Imu SPECIFIES m/s^2. rs_driver's ImuData carries acceleration in g:
+  // decodeImuPkt scales the raw counts by acclFsr/FSR_BASE and stops there, while the
+  // gyro right beside it IS converted to rad/s (* M_PI / 180). So the SI intent is
+  // clearly there and acceleration is the one that was missed.
+  //
+  // Publishing g in a message that documents m/s^2 is a quiet fault: |a| reads 0.98
+  // instead of 9.81, so anything estimating gravity folds the missing factor into its
+  // accelerometer bias and never complains. RKO-LIO does exactly that - on MEDRA the
+  // same bug with the Livox driver produced a logged bias of -8.817, which is
+  // 0.995 - 9.81 to three decimals.
+  constexpr double kGravity = 9.80665;   // CODATA standard gravity
+  imu_msg.linear_acceleration.x = data->linear_acceleration_x * kGravity;
+  imu_msg.linear_acceleration.y = data->linear_acceleration_y * kGravity;
+  imu_msg.linear_acceleration.z = data->linear_acceleration_z * kGravity;
   return imu_msg;
 }
 #endif
