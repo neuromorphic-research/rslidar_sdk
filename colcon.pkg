@@ -1,0 +1,14 @@
+# Build options for rslidar_sdk in a colcon workspace.
+#
+# ENABLE_IMU_DATA_PARSE defaults to OFF upstream, and that default is a trap on a lidar
+# that HAS an IMU. The Airy streams IMU on its own UDP port (51-byte packets at ~200 Hz on
+# :6688 alongside MSOP on :6699) and decoder_RSAIRY.hpp implements decodeImuPkt - but the
+# publisher lives behind `#ifdef ENABLE_IMU_DATA_PARSE`, so with the default the topic is
+# not merely empty, it does not exist. Setting ros_send_imu_data_topic in the YAML looks
+# like it should be enough and is not: the key is read inside the same ifdef.
+#
+# That matters because RKO-LIO is lidar-INERTIAL odometry. Without this flag mapping and
+# localization have no IMU to fuse.
+cmake-args:
+  - -DCMAKE_BUILD_TYPE=Release
+  - -DENABLE_IMU_DATA_PARSE=ON
